@@ -1,24 +1,42 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import Navbar from "./components/Navbar";
+
+import Login from "./pages/Login";
+import ApplyLeave from "./pages/ApplyLeave";
+import LeaveList from "./pages/LeaveList";
+import ManageLeaves from "./pages/ManageLeaves";
+import Dashboard from "./pages/Dashboard";
+import CalendarView from "./pages/CalendarView";
+import AdminPanel from "./pages/AdminPanel";
+
+function AppWrapper() {
+  const location = useLocation();
+
+  // Hide navbar only on login page
+  const hideNavbar = location.pathname === "/";
+
+  return (
+    <>
+      {!hideNavbar && <Navbar />}
+
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/apply" element={<ApplyLeave />} />
+        <Route path="/list" element={<LeaveList />} />
+        <Route path="/manage" element={<ManageLeaves />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/calendar" element={<CalendarView />} />
+        <Route path="/admin" element={<AdminPanel />} />
+      </Routes>
+    </>
+  );
+}
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+      <AppWrapper />
+    </BrowserRouter>
   );
 }
 
