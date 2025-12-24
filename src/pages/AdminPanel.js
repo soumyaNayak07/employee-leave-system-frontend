@@ -87,7 +87,7 @@ function AdminPanel() {
             style={{ ...input, marginBottom: 0 }}
           />
           <button onClick={() => setShowPassword(!showPassword)} style={eyeBtn}>
-            {showPassword ? "🙈" : "👁️"}
+            {showPassword ? "👁️" : "🙈"}
           </button>
         </div>
 
