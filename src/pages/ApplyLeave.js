@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_URL } from "../config";
 
 function ApplyLeave() {
 
@@ -20,7 +21,7 @@ function ApplyLeave() {
 
     setMsg("Processing...");
 
-    const res = await fetch("http://localhost:5000/api/leave/apply", {
+    const res = await fetch(`${API_URL}/api/leave/apply`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

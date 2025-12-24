@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../config";
 
 function LeaveList() {
 
@@ -20,7 +21,7 @@ function LeaveList() {
   }, []);
 
   const fetchLeaves = async () => {
-    const res = await fetch("http://localhost:5000/api/leave");
+    const res = await fetch(`${API_URL}/api/leave`);
     const data = await res.json();
 
     const myLeaves = data.filter(item => item.userId === user._id);
@@ -28,7 +29,7 @@ function LeaveList() {
   };
 
   const cancelLeave = async (id) => {
-    await fetch(`http://localhost:5000/api/leave/delete/${id}`, {
+    await fetch(`${API_URL}/api/leave/delete/${id}`, {
       method: "DELETE"
     });
 
@@ -48,7 +49,7 @@ function LeaveList() {
   };
 
   const saveEdit = async () => {
-    await fetch(`http://localhost:5000/api/leave/update/${editLeaveData.id}`, {
+    await fetch(`${API_URL}/api/leave/update/${editLeaveData.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

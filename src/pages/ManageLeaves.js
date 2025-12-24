@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../config";  
 
 function ManageLeaves() {
 
@@ -11,13 +12,13 @@ function ManageLeaves() {
   }, []);
 
   const loadData = async () => {
-    const res = await fetch("http://localhost:5000/api/leave");
+    const res = await fetch(`${API_URL}/api/leave`);
     const data = await res.json();
     setLeaves(data);
   };
 
   const updateLeave = async (id, status) => {
-    await fetch(`http://localhost:5000/api/leave/update/${id}`, {
+    await fetch(`${API_URL}/api/leave/update/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status })
