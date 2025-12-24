@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../config";
 
 function AdminPanel() {
+  const loggedUser = JSON.parse(localStorage.getItem("user"));
 
-  const user = JSON.parse(localStorage.getItem("user"));
   const [users, setUsers] = useState([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("employee");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("employee");
+  const [showPassword, setShowPassword] = useState(false);
   const [filterRole, setFilterRole] = useState("All");
 
   useEffect(() => {
@@ -15,7 +17,7 @@ function AdminPanel() {
   }, []);
 
   const loadUsers = async () => {
-    const res = await fetch("http://localhost:5000/api/auth/all-users");
+    const res = await fetch(`${API_URL}/api/auth/all-users`);
     const data = await res.json();
     setUsers(data);
   };
@@ -24,242 +26,253 @@ function AdminPanel() {
     if (!name || !email || !password) {
       alert("All fields required");
       return;
+    }else if (password.length < 8) {
+      alert("Password must be at least 8 characters");
+      return;
     }
 
-    await fetch("http://localhost:5000/api/auth/create-user", {
+    await fetch(`${API_URL}/api/auth/create-user`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password, role })
     });
 
-    alert("User created successfully!");
     setName("");
     setEmail("");
     setPassword("");
+    setRole("employee");
+    loadUsers();
+  };
+
+  const updateRole = async (userId, newRole) => {
+    await fetch(`${API_URL}/api/auth/change-role/${userId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: newRole })
+    });
     loadUsers();
   };
 
   const resetLeaves = async () => {
-    await fetch("http://localhost:5000/api/auth/reset-leaves", {
-      method: "PUT"
-    });
-
-    alert("Leave balance reset");
+    await fetch(`${API_URL}/api/auth/reset-leaves`, { method: "PUT" });
     loadUsers();
   };
 
-  if (user.role !== "superadmin") {
-    return (
-      <div style={{ padding: "40px" }}>
-        <h2>Access Denied ❌</h2>
-      </div>
-    );
+  if (loggedUser.role !== "superadmin") {
+    return <h2 style={{ padding: "40px" }}>Access Denied ❌</h2>;
   }
 
   const filteredUsers =
     filterRole === "All"
       ? users
-      : users.filter(u => u.role === filterRole.toLowerCase());
+      : users.filter(u => u.role === filterRole);
 
   return (
-    <div style={{
-      padding: "40px",
-      background: "#f5f6ff",
-      minHeight: "90vh"
-    }}>
+    <div style={page}>
+      <h1 style={title}>Super Admin Dashboard</h1>
 
-      <h2 style={{
-        textAlign: "center",
-        fontSize: "32px",
-        marginBottom: "30px"
-      }}>
-        🛠 Super Admin Control Panel
-      </h2>
+      {/* CREATE USER */}
+      <div style={card}>
+        <h3 style={sectionTitle}>Create User</h3>
 
-      {/* CREATE USER CARD */}
-      <div style={{
-        width: "500px",
-        margin: "0 auto",
-        background: "white",
-        padding: "25px",
-        borderRadius: "12px",
-        boxShadow: "0px 0px 12px rgba(0,0,0,0.1)",
-        marginBottom: "40px"
-      }}>
-        <h3 style={{
-          textAlign: "center",
-          marginBottom: "20px",
-          fontSize: "24px"
-        }}>
-          👤 Create New User
-        </h3>
+        <input placeholder="Name" value={name} onChange={e => setName(e.target.value)} style={input} />
+        <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} style={input} />
 
-        <input
-          placeholder="Name"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "12px",
-            marginBottom: "12px",
-            borderRadius: "6px",
-            border: "1px solid #bbb"
-          }}
-        />
+        <div style={passwordRow}>
+          <input
+            placeholder="Password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            style={{ ...input, marginBottom: 0 }}
+          />
+          <button onClick={() => setShowPassword(!showPassword)} style={eyeBtn}>
+            {showPassword ? "🙈" : "👁️"}
+          </button>
+        </div>
 
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "12px",
-            marginBottom: "12px",
-            borderRadius: "6px",
-            border: "1px solid #bbb"
-          }}
-        />
-
-        <input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "12px",
-            marginBottom: "12px",
-            borderRadius: "6px",
-            border: "1px solid #bbb"
-          }}
-        />
-
-        <select
-          onChange={e => setRole(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "12px",
-            marginBottom: "20px",
-            borderRadius: "6px",
-            border: "1px solid #bbb"
-          }}
-        >
+        <select value={role} onChange={e => setRole(e.target.value)} style={input}>
           <option value="employee">Employee</option>
           <option value="manager">Manager</option>
+          <option value="superadmin">Super Admin</option>
         </select>
 
-        <button
-          onClick={createUser}
-          style={{
-            width: "100%",
-            padding: "12px",
-            background: "black",
-            color: "white",
-            borderRadius: "6px",
-            border: "none",
-            cursor: "pointer",
-            fontWeight: "bold",
-            fontSize: "16px"
-          }}
-        >
-          Create User ➕
+        <button onClick={createUser} style={primaryBtn}>
+          Create User
         </button>
       </div>
 
-
-      {/* USER LIST HEADER + FILTER */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: "20px"
-      }}>
-        <h3 style={{
-          fontSize: "26px"
-        }}>
-          📋 All Users
-        </h3>
-
-        <select
-          value={filterRole}
-          onChange={e => setFilterRole(e.target.value)}
-          style={{
-            padding: "10px",
-            fontSize: "16px",
-            borderRadius: "6px",
-            border: "1px solid #bbb"
-          }}
-        >
+      {/* USERS HEADER */}
+      <div style={headerRow}>
+        <h3>All Users</h3>
+        <select value={filterRole} onChange={e => setFilterRole(e.target.value)} style={filter}>
           <option value="All">All</option>
-          <option value="Employee">Employee</option>
-          <option value="Manager">Manager</option>
+          <option value="employee">Employee</option>
+          <option value="manager">Manager</option>
+          <option value="superadmin">Super Admin</option>
         </select>
       </div>
 
-
-      {/* USER LIST TABLE */}
-      <table style={{
-        width: "100%",
-        borderCollapse: "collapse",
-        background: "white",
-        borderRadius: "10px",
-        overflow: "hidden",
-        boxShadow: "0px 0px 12px rgba(0,0,0,0.1)",
-        marginBottom: "30px"
-      }}>
+      {/* USERS TABLE */}
+      <table style={table}>
         <thead>
-          <tr style={{
-            background: "black",
-            color: "white",
-            textAlign: "left"
-          }}>
-            <th style={{ padding: "12px" }}>Name</th>
-            <th style={{ padding: "12px" }}>Email</th>
-            <th style={{ padding: "12px" }}>Role</th>
-            <th style={{ padding: "12px" }}>Leaves</th>
+          <tr style={thead}>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Current Role</th>
+            <th>Change Role</th>
+            <th>Leaves</th>
           </tr>
         </thead>
-
         <tbody>
-          {filteredUsers.map((u, i) => (
-            <tr
-              key={i}
-              style={{
-                borderBottom: "1px solid #ddd",
-                background: i % 2 === 0 ? "#fafafa" : "white"
-              }}
-            >
-              <td style={{ padding: "12px" }}>{u.name}</td>
-              <td style={{ padding: "12px" }}>{u.email}</td>
-              <td style={{ padding: "12px" }}>{u.role}</td>
-              <td style={{ padding: "12px" }}>{u.remainingLeaves}</td>
+          {filteredUsers.map(u => (
+            <tr key={u._id} style={row}>
+              <td>{u.name}</td>
+              <td>{u.email}</td>
+              <td><span style={badge(u.role)}>{u.role}</span></td>
+              <td>
+                <select defaultValue={u.role} onChange={e => (u.newRole = e.target.value)}>
+                  <option value="employee">Employee</option>
+                  <option value="manager">Manager</option>
+                  <option value="superadmin">Super Admin</option>
+                </select>
+                <button onClick={() => updateRole(u._id, u.newRole || u.role)} style={confirmBtn}>
+                  ✔
+                </button>
+              </td>
+              <td>{u.remainingLeaves}</td>
             </tr>
           ))}
         </tbody>
       </table>
 
-
-      {/* RESET LEAVES */}
-      <button
-        onClick={resetLeaves}
-        style={{
-          padding: "12px 20px",
-          background: "black",
-          color: "white",
-          border: "none",
-          borderRadius: "8px",
-          cursor: "pointer",
-          fontSize: "18px",
-          fontWeight: "bold",
-          display: "block",
-          margin: "0 auto"
-        }}
-      >
-        🔄 Reset All Leave Balances
+      <button onClick={resetLeaves} style={dangerBtn}>
+        Reset All Leave Balances
       </button>
-
     </div>
   );
 }
+
+/* ================= STYLES ================= */
+
+const page = {
+  background: "#f4f6fb",
+  minHeight: "100vh",
+  padding: "40px"
+};
+
+const title = {
+  textAlign: "center",
+  marginBottom: "30px"
+};
+
+const card = {
+  background: "white",
+  maxWidth: "500px",
+  margin: "0 auto 40px",
+  padding: "25px",
+  borderRadius: "12px",
+  boxShadow: "0 8px 20px rgba(0,0,0,0.08)"
+};
+
+const sectionTitle = {
+  marginBottom: "20px",
+  textAlign: "center"
+};
+
+const input = {
+  width: "100%",
+  padding: "12px",
+  marginBottom: "12px",
+  borderRadius: "6px",
+  border: "1px solid #ccc"
+};
+
+const passwordRow = {
+  display: "flex",
+  gap: "8px",
+  alignItems: "center",
+  marginBottom: "12px"
+};
+
+const eyeBtn = {
+  padding: "10px",
+  borderRadius: "6px",
+  cursor: "pointer",
+  border: "1px solid #ccc",
+  background: "#eee"
+};
+
+const primaryBtn = {
+  width: "100%",
+  padding: "12px",
+  background: "#2563eb",
+  color: "white",
+  border: "none",
+  borderRadius: "6px",
+  fontWeight: "bold",
+  cursor: "pointer"
+};
+
+const dangerBtn = {
+  marginTop: "25px",
+  padding: "12px 20px",
+  background: "#dc2626",
+  color: "white",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+  display: "block",
+  marginLeft: "auto"
+};
+
+const headerRow = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: "15px"
+};
+
+const filter = {
+  padding: "8px",
+  borderRadius: "6px"
+};
+
+const table = {
+  width: "100%",
+  background: "white",
+  borderCollapse: "collapse",
+  borderRadius: "10px",
+  overflow: "hidden",
+  boxShadow: "0 6px 15px rgba(0,0,0,0.08)"
+};
+
+const thead = {
+  background: "#111827",
+  color: "white"
+};
+
+const row = {
+  borderBottom: "1px solid #eee"
+};
+
+const confirmBtn = {
+  marginLeft: "8px",
+  cursor: "pointer"
+};
+
+const badge = role => ({
+  padding: "4px 10px",
+  borderRadius: "12px",
+  fontSize: "12px",
+  fontWeight: "bold",
+  color: "white",
+  background:
+    role === "superadmin"
+      ? "#7c3aed"
+      : role === "manager"
+      ? "#0ea5e9"
+      : "#16a34a"
+});
 
 export default AdminPanel;

@@ -9,6 +9,7 @@ function ApplyLeave() {
   const [endDate, setEndDate] = useState("");
   const [reason, setReason] = useState("");
   const [msg, setMsg] = useState("");
+  const [popup,setPopup]=useState("none");
 
   const submitForm = async () => {
 
@@ -34,7 +35,10 @@ function ApplyLeave() {
 
     const data = await res.json();
 
-    setMsg(data.message.includes("applied") ? "✅ Leave applied!" : "❌ Failed");
+    setPopup("flex");
+    setTimeout(() => {
+      setPopup("none");
+    }, 2000);
 
     if (data.remainingLeaves !== undefined) {
       const updatedUser = {
@@ -54,6 +58,9 @@ function ApplyLeave() {
   };
 
   return (
+
+    
+
     <div style={{
       display: "flex",
       justifyContent: "center",
@@ -62,6 +69,9 @@ function ApplyLeave() {
       background: "#f5f6ff",
       minHeight: "90vh"
     }}>
+      <div style={{   width:"60%", height:"100px", background:"black", color:"white", padding:"10px", borderRadius:"8px", display:`${popup}`, justifyContent:"center",alignItems:"center", textAlign:"center", position:"fixed", top:"50%", left:"20%" }}>
+      LEAVE APPLIED
+      </div>
 
       <div style={{
         width: "450px",
